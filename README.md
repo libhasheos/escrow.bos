@@ -21,7 +21,7 @@ init
     transfer
 </h1>
 
-## ACTION: stprofileuns
+## ACTION: transfer
 **PARAMETERS:**
 * __from__ is an eosio account name. 
 * __to__ is an eosio account name. 
