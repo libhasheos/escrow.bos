@@ -30,7 +30,7 @@ TEST_ACTIVE_PUBLIC_KEY = 'EOS7rjn3r52PYd2ppkVEKYvy6oRDP9MZsJUPB2MStrak8LS36pnTZ'
 CONTRACT_NAME = 'dacescrow'
 ACCOUNT_NAME = 'dacescrow'
 
-CONTRACTS_DIR = 'tests/contract-shared-dependencies'
+CONTRACTS_DIR = 'contract-shared-dependencies'
 
 def configure_wallet
   beforescript = <<~SHELL
@@ -51,36 +51,38 @@ end
 # @param [if not nil transfer this amount to the elections contract so they can register as an election candidate] stake
 # @param [if not nil register as a candidate with this amount as the requested pay] requestedpay
 def seed_dac_account(name, issue: nil, memberreg: nil, stake: nil, requestedpay: nil)
-  `cleos system newaccount --stake-cpu "10.0000 EOS" --stake-net "10.0000 EOS" --transfer --buy-ram-kbytes 1024 eosio #{name} #{TEST_OWNER_PUBLIC_KEY} #{TEST_ACTIVE_PUBLIC_KEY}`
+  #`cleos system newaccount --stake-cpu "10.0000 BOS" --stake-net "10.0000 BOS" --transfer --buy-ram-kbytes 1024 eosio #{name} #{TEST_OWNER_PUBLIC_KEY} #{TEST_ACTIVE_PUBLIC_KEY}`
 
-  unless issue.nil?
-    `cleos push action eosdactokens issue '{ "to": "#{name}", "quantity": "#{issue}", "memo": "Initial amount."}' -p eosdactokens`
-  end
+  `cleos create account eosio #{name} #{TEST_OWNER_PUBLIC_KEY} #{TEST_ACTIVE_PUBLIC_KEY}`
 
-  unless memberreg.nil?
-    `cleos push action eosdactokens memberreg '{ "sender": "#{name}", "agreedterms": "#{memberreg}"}' -p #{name}`
-  end
+  # unless issue.nil?
+  #   `cleos push action eosdactokens issue '{ "to": "#{name}", "quantity": "#{issue}", "memo": "Initial amount."}' -p eosdactokens`
+  # end
 
-  unless stake.nil?
-    `cleos push action eosdactokens transfer '{ "from": "#{name}", "to": "daccustodian", "quantity": "#{stake}","memo":"daccustodian"}' -p #{name}`
-  end
+  # unless memberreg.nil?
+  #   `cleos push action eosdactokens memberreg '{ "sender": "#{name}", "agreedterms": "#{memberreg}"}' -p #{name}`
+  # end
 
-  unless requestedpay.nil?
-    `cleos push action daccustodian nominatecand '{ "cand": "#{name}", "bio": "any bio", "requestedpay": "#{requestedpay}"}' -p #{name}`
-  end
+  # unless stake.nil?
+  #   `cleos push action eosdactokens transfer '{ "from": "#{name}", "to": "daccustodian", "quantity": "#{stake}","memo":"daccustodian"}' -p #{name}`
+  # end
+
+  # unless requestedpay.nil?
+  #   `cleos push action daccustodian nominatecand '{ "cand": "#{name}", "bio": "any bio", "requestedpay": "#{requestedpay}"}' -p #{name}`
+  # end
 end
 
 def reset_chain
-  `kill -INT \`pgrep nodeos\``
+  #`kill -INT \`pgrep nodeos\``
 
   # Launch nodeos in a new tab so the output can be observed.
   # ttab is a nodejs module but this could be easily achieved manually without ttab.
-  `ttab 'nodeos --delete-all-blocks --verbose-http-errors'`
+  #`ttab 'nodeos --delete-all-blocks --verbose-http-errors'`
 
   # nodeos --delete-all-blocks --verbose-http-errors &>/dev/null & # Alternative without ttab installed
 
-  puts "Give the chain a chance to settle."
-  sleep 4
+  #puts "Give the chain a chance to settle."
+  #sleep 4
 
 end
 
@@ -105,9 +107,9 @@ def seed_system_contracts
   cleos push action eosio setpriv  '["eosio.msig",1]' -p eosio
   cleos set contract eosio.msig #{CONTRACTS_DIR}/eosio.msig -p eosio.msig
   cleos set contract eosio.token #{CONTRACTS_DIR}/eosio.token -p eosio.token
-  cleos push action eosio.token create '["eosio","10000000000.0000 EOS"]' -p eosio.token
-  cleos push action eosio.token issue '["eosio", "1000000000.0000 EOS", "Initial EOS amount."]' -p eosio
-  cleos set contract eosio #{CONTRACTS_DIR}/eosio.system -p eosio
+  cleos push action eosio.token create '["eosio","10000000000.0000 BOS"]' -p eosio.token
+  cleos push action eosio.token issue '["eosio", "1000000000.0000 BOS", "Initial BOS amount."]' -p eosio
+  # cleos set contract eosio #{CONTRACTS_DIR}/eosio.system -p eosio
   SHELL
 
   `#{beforescript}`
@@ -117,29 +119,37 @@ end
 def configure_dac_accounts
   beforescript = <<~SHELL
    # set -x
-   cleos system newaccount --stake-cpu \"10.0000 EOS\" --stake-net \"10.0000 EOS\" --transfer --buy-ram-kbytes 1024 eosio daccustodian #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
-   cleos system newaccount --stake-cpu \"10.0000 EOS\" --stake-net \"10.0000 EOS\" --transfer --buy-ram-kbytes 1024 eosio eosdactokens #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
-   cleos system newaccount --stake-cpu \"10.0000 EOS\" --stake-net \"10.0000 EOS\" --transfer --buy-ram-kbytes 1024 eosio dacauthority #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
-   cleos system newaccount --stake-cpu \"10.0000 EOS\" --stake-net \"10.0000 EOS\" --transfer --buy-ram-kbytes 1024 eosio eosdacthedac #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
-   cleos system newaccount --stake-cpu \"10.0000 EOS\" --stake-net \"10.0000 EOS\" --transfer --buy-ram-kbytes 1024 eosio dacocoiogmbh #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
-   cleos system newaccount --stake-cpu \"10.0000 EOS\" --stake-net \"10.0000 EOS\" --transfer --buy-ram-kbytes 1024 eosio dacproposals #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
-   cleos system newaccount --stake-cpu \"10.0000 EOS\" --stake-net \"10.0000 EOS\" --transfer --buy-ram-kbytes 1024 eosio dacescrow #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+  #  cleos system newaccount --stake-cpu \"10.0000 BOS\" --stake-net \"10.0000 BOS\" --transfer --buy-ram-kbytes 1024 eosio daccustodian #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+  #  cleos system newaccount --stake-cpu \"10.0000 BOS\" --stake-net \"10.0000 BOS\" --transfer --buy-ram-kbytes 1024 eosio eosdactokens #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+  #  cleos system newaccount --stake-cpu \"10.0000 BOS\" --stake-net \"10.0000 BOS\" --transfer --buy-ram-kbytes 1024 eosio dacauthority #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+  #  cleos system newaccount --stake-cpu \"10.0000 BOS\" --stake-net \"10.0000 BOS\" --transfer --buy-ram-kbytes 1024 eosio eosdacthedac #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+  #  cleos system newaccount --stake-cpu \"10.0000 BOS\" --stake-net \"10.0000 BOS\" --transfer --buy-ram-kbytes 1024 eosio dacocoiogmbh #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+  #  cleos system newaccount --stake-cpu \"10.0000 BOS\" --stake-net \"10.0000 BOS\" --transfer --buy-ram-kbytes 1024 eosio dacproposals #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+  #  cleos system newaccount --stake-cpu \"10.0000 BOS\" --stake-net \"10.0000 BOS\" --transfer --buy-ram-kbytes 1024 eosio dacescrow #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+   
+   cleos create account eosio daccustodian #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+   cleos create account eosio eosdactokens #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+   cleos create account eosio dacauthority #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+   cleos create account eosio eosdacthedac #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+   cleos create account eosio dacocoiogmbh #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+   cleos create account eosio dacproposals #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+   cleos create account eosio dacescrow #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
 
    # Setup the inital permissions.
-   cleos set account permission dacauthority owner '{"threshold": 1,"keys": [{"key": "#{CONTRACT_ACTIVE_PUBLIC_KEY}","weight": 1}],"accounts": [{"permission":{"actor":"daccustodian","permission":"eosio.code"},"weight":1}]}' '' -p dacauthority@owner
-   # cleos set account permission eosdacthedac active '{"threshold": 1,"keys": [{"key": "#{CONTRACT_ACTIVE_PUBLIC_KEY}","weight": 1}],"accounts": [{"permission":{"actor":"daccustodian","permission":"eosio.code"},"weight":1}]}' owner -p eosdacthedac@owner
-   cleos set account permission daccustodian xfer '{"threshold": 1,"keys": [{"key": "#{CONTRACT_ACTIVE_PUBLIC_KEY}","weight": 1}],"accounts": [{"permission":{"actor":"daccustodian","permission":"eosio.code"},"weight":1}]}' active -p eosdacthedac@active
-   cleos push action eosio.token issue '["eosdacthedac", "100000.0000 EOS", "Initial EOS amount."]' -p eosio
+  #  cleos set account permission dacauthority owner '{"threshold": 1,"keys": [{"key": "#{CONTRACT_ACTIVE_PUBLIC_KEY}","weight": 1}],"accounts": [{"permission":{"actor":"daccustodian","permission":"eosio.code"},"weight":1}]}' '' -p dacauthority@owner
+  #  cleos set account permission eosdacthedac active '{"threshold": 1,"keys": [{"key": "#{CONTRACT_ACTIVE_PUBLIC_KEY}","weight": 1}],"accounts": [{"permission":{"actor":"daccustodian","permission":"eosio.code"},"weight":1}]}' owner -p eosdacthedac@owner
+  #  cleos set account permission daccustodian xfer '{"threshold": 1,"keys": [{"key": "#{CONTRACT_ACTIVE_PUBLIC_KEY}","weight": 1}],"accounts": [{"permission":{"actor":"daccustodian","permission":"eosio.code"},"weight":1}]}' active -p eosdacthedac@active
+  #  cleos push action eosio.token issue '["eosdacthedac", "100000.0000 BOS", "Initial BOS amount."]' -p eosio
 
-   cleos set action permission eosdacthedac eosdactokens transfer xfer
-   cleos set action permission eosdacthedac eosio.token transfer xfer  
-   cleos set action permission daccustodian eosdactokens transfer xfer  
+  #  cleos set action permission eosdacthedac eosdactokens transfer xfer
+  #  cleos set action permission eosdacthedac eosio.token transfer xfer  
+  #  cleos set action permission daccustodian eosdactokens transfer xfer  
  
    # Configure accounts permissions hierarchy
-   cleos set account permission dacauthority high #{CONTRACT_OWNER_PUBLIC_KEY} owner -p dacauthority@owner 
-   cleos set account permission dacauthority med #{CONTRACT_OWNER_PUBLIC_KEY} high -p dacauthority@owner 
-   cleos set account permission dacauthority low #{CONTRACT_OWNER_PUBLIC_KEY} med -p dacauthority@owner 
-   cleos set account permission dacauthority one #{CONTRACT_OWNER_PUBLIC_KEY} low -p dacauthority@owner   
+  #  cleos set account permission dacauthority high #{CONTRACT_OWNER_PUBLIC_KEY} owner -p dacauthority@owner 
+  #  cleos set account permission dacauthority med #{CONTRACT_OWNER_PUBLIC_KEY} high -p dacauthority@owner 
+  #  cleos set account permission dacauthority low #{CONTRACT_OWNER_PUBLIC_KEY} med -p dacauthority@owner 
+  #  cleos set account permission dacauthority one #{CONTRACT_OWNER_PUBLIC_KEY} low -p dacauthority@owner   
 
    cleos set account permission #{ACCOUNT_NAME} active '{"threshold": 1,"keys": [{"key": "#{CONTRACT_ACTIVE_PUBLIC_KEY}","weight": 1}],"accounts": [{"permission":{"actor":"#{ACCOUNT_NAME}","permission":"eosio.code"},"weight":1}]}' owner -p #{ACCOUNT_NAME}
 
@@ -158,7 +168,7 @@ def install_dependencies
    cleos set contract daccustodian #{CONTRACTS_DIR}/daccustodian -p daccustodian 
    cleos set contract eosdactokens #{CONTRACTS_DIR}/eosdactokens -p eosdactokens
    cleos set contract dacproposals #{CONTRACTS_DIR}/dacproposals -p dacproposals
-   cleos set contract #{ACCOUNT_NAME} output/unit_tests/#{CONTRACT_NAME} -p #{ACCOUNT_NAME}
+   cleos set contract #{ACCOUNT_NAME} ../output/unit_tests/#{CONTRACT_NAME} -p #{ACCOUNT_NAME}
 
   SHELL
 
@@ -169,28 +179,28 @@ end
 # Configure the initial state for the contracts for elements that are assumed to work from other contracts already.
 def configure_contracts
   # configure accounts for eosdactokens
-  `cleos push action eosdactokens updateconfig '["daccustodian"]' -p eosdactokens`
-  `cleos push action eosdactokens create '{ "issuer": "eosdactokens", "maximum_supply": "100000.0000 EOSDAC", "transfer_locked": false}' -p eosdactokens`
-  `cleos push action eosdactokens issue '{ "to": "eosdactokens", "quantity": "78337.0000 EOSDAC", "memo": "Initial amount of tokens for you."}' -p eosdactokens`
-  `cleos push action eosio.token issue '{ "to": "eosdacthedac", "quantity": "100000.0000 EOS", "memo": "Initial EOS amount."}' -p eosio`
+  # `cleos push action eosdactokens updateconfig '["daccustodian"]' -p eosdactokens`
+  # `cleos push action eosdactokens create '{ "issuer": "eosdactokens", "maximum_supply": "100000.0000 BOSDAC", "transfer_locked": false}' -p eosdactokens`
+  # `cleos push action eosdactokens issue '{ "to": "eosdactokens", "quantity": "78337.0000 BOSDAC", "memo": "Initial amount of tokens for you."}' -p eosdactokens`
+  # `cleos push action eosio.token issue '{ "to": "eosdacthedac", "quantity": "100000.0000 BOS", "memo": "Initial BOS amount."}' -p eosio`
 
   #create users
   # Ensure terms are registered in the token contract
-  `cleos push action eosdactokens newmemterms '{ "terms": "normallegalterms", "hash": "New Latest terms"}' -p eosdactokens`
+  # `cleos push action eosdactokens newmemterms '{ "terms": "normallegalterms", "hash": "New Latest terms"}' -p eosdactokens`
 
   #create users
-  seed_dac_account("sender1", issue: "100.0000 EOSDAC", memberreg: "New Latest terms")
-  seed_dac_account("sender2", issue: "100.0000 EOSDAC", memberreg: "New Latest terms")
-  seed_dac_account("sender3", issue: "100.0000 EOSDAC", memberreg: "New Latest terms")
-  seed_dac_account("sender4", issue: "100.0000 EOSDAC", memberreg: "New Latest terms")
-  seed_dac_account("receiver1", issue: "100.0000 EOSDAC", memberreg: "New Latest terms")
-  seed_dac_account("arb1", issue: "100.0000 EOSDAC", memberreg: "New Latest terms")
-  seed_dac_account("arb2", issue: "100.0000 EOSDAC", memberreg: "New Latest terms")
+  seed_dac_account("sender1", issue: "100.0000 BOSDAC", memberreg: "New Latest terms")
+  seed_dac_account("sender2", issue: "100.0000 BOSDAC", memberreg: "New Latest terms")
+  seed_dac_account("sender3", issue: "100.0000 BOSDAC", memberreg: "New Latest terms")
+  seed_dac_account("sender4", issue: "100.0000 BOSDAC", memberreg: "New Latest terms")
+  seed_dac_account("receiver1", issue: "100.0000 BOSDAC", memberreg: "New Latest terms")
+  seed_dac_account("arb1", issue: "100.0000 BOSDAC", memberreg: "New Latest terms")
+  seed_dac_account("arb2", issue: "100.0000 BOSDAC", memberreg: "New Latest terms")
 
-  `cleos push action eosio.token issue '{ "to": "sender1", "quantity": "1000.0000 EOS", "memo": "Initial EOS amount."}' -p eosio`
-  `cleos push action eosio.token issue '{ "to": "sender2", "quantity": "1000.0000 EOS", "memo": "Initial EOS amount."}' -p eosio`
-  `cleos push action eosio.token issue '{ "to": "sender3", "quantity": "1000.0000 EOS", "memo": "Initial EOS amount."}' -p eosio`
-  `cleos push action eosio.token issue '{ "to": "sender4", "quantity": "1000.0000 EOS", "memo": "Initial EOS amount."}' -p eosio`
+  `cleos push action eosio.token issue '{ "to": "sender1", "quantity": "1000.0000 BOS", "memo": "Initial BOS amount."}' -p eosio`
+  `cleos push action eosio.token issue '{ "to": "sender2", "quantity": "1000.0000 BOS", "memo": "Initial BOS amount."}' -p eosio`
+  `cleos push action eosio.token issue '{ "to": "sender3", "quantity": "1000.0000 BOS", "memo": "Initial BOS amount."}' -p eosio`
+  `cleos push action eosio.token issue '{ "to": "sender4", "quantity": "1000.0000 BOS", "memo": "Initial BOS amount."}' -p eosio`
 end
 
 def killchain
@@ -241,7 +251,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": [],
-                  "ext_asset": {"quantity":"0.0000 EOS", "contract":"eosio.token"},    
+                  "ext_asset": {"quantity":"0.0000 BOS", "contract":"eosio.token"},    
                   "memo": "some memo",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": "18446744073709551615"
@@ -256,38 +266,38 @@ describe "dacescrow" do
 
   describe "transfer" do
     context "without valid auth" do
-      command %(cleos push action eosio.token transfer '{"from": "sender1", "to": "dacescrow", "quantity": "5.0000 EOS", "memo": "here is a memo" }' -p sender2), allow_error: true
+      command %(cleos push action eosio.token transfer '{"from": "sender1", "to": "dacescrow", "quantity": "5.0000 BOS", "memo": "here is a memo" }' -p sender2), allow_error: true
       its(:stderr) {is_expected.to include('missing authority of sender1')}
     end
     context "without a valid escrow" do
-      command %(cleos push action eosio.token transfer '{"from": "sender2", "to": "dacescrow", "quantity": "5.0000 EOS", "memo": "here is a memo" }' -p sender2), allow_error: true
+      command %(cleos push action eosio.token transfer '{"from": "sender2", "to": "dacescrow", "quantity": "5.0000 BOS", "memo": "here is a memo" }' -p sender2), allow_error: true
       its(:stderr) {is_expected.to include('Could not find existing escrow to deposit to, transfer cancelled')}
     end
-    context "balance should not have reduced from 1000.0000 EOS" do
-      command %(cleos get currency balance eosio.token sender1 EOS), allow_error: true
+    context "balance should not have reduced from 1000.0000 BOS" do
+      command %(cleos get currency balance eosio.token sender1 BOS), allow_error: true
       it do
         expect(subject.stdout).to eq <<~JSON
-            1000.0000 EOS
+            1000.0000 BOS
         JSON
       end
     end
     context "with a valid escrow" do
-      command %(cleos push action eosio.token transfer '{"from": "sender1", "to": "dacescrow", "quantity": "5.0000 EOS", "memo": "here is a memo" }' -p sender1), allow_error: true
+      command %(cleos push action eosio.token transfer '{"from": "sender1", "to": "dacescrow", "quantity": "5.0000 BOS", "memo": "here is a memo" }' -p sender1), allow_error: true
       its(:stdout) {is_expected.to include('dacescrow <= eosio.token::transfer')}
     end
-    context "balance should have reduced to 995.0000 EOS" do
-      command %(cleos get currency balance eosio.token sender1 EOS), allow_error: true
+    context "balance should have reduced to 995.0000 BOS" do
+      command %(cleos get currency balance eosio.token sender1 BOS), allow_error: true
       it do
         expect(subject.stdout).to eq <<~JSON
-            995.0000 EOS
+            995.0000 BOS
         JSON
       end
     end
-    context "balance of dacescrow should have increased by 5.0000 EOS" do
-      command %(cleos get currency balance eosio.token dacescrow EOS), allow_error: true
+    context "balance of dacescrow should have increased by 5.0000 BOS" do
+      command %(cleos get currency balance eosio.token dacescrow BOS), allow_error: true
       it do
         expect(subject.stdout).to eq <<~JSON
-            5.0000 EOS
+            5.0000 BOS
         JSON
       end
     end
@@ -302,7 +312,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": [],
-                  "ext_asset": {"quantity":"5.0000 EOS", "contract":"eosio.token"},    
+                  "ext_asset": {"quantity":"5.0000 BOS", "contract":"eosio.token"},    
                   "memo": "some memo",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": "18446744073709551615"
@@ -362,7 +372,7 @@ describe "dacescrow" do
                   "approvals": [
                     "arb1"
                   ],
-                  "ext_asset": {"quantity":"5.0000 EOS", "contract":"eosio.token"},    
+                  "ext_asset": {"quantity":"5.0000 BOS", "contract":"eosio.token"},    
                   "memo": "some memo",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": "18446744073709551615"
@@ -372,7 +382,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": [],
-                  "ext_asset": {"quantity":"0.0000 EOS", "contract":"eosio.token"},    
+                  "ext_asset": {"quantity":"0.0000 BOS", "contract":"eosio.token"},    
                   "memo": "another empty escrow",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": "18446744073709551615"
@@ -431,7 +441,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": ["sender1"],
-                  "ext_asset": {"quantity":"5.0000 EOS", "contract":"eosio.token"},    
+                  "ext_asset": {"quantity":"5.0000 BOS", "contract":"eosio.token"},    
                   "memo": "some memo",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": "18446744073709551615"
@@ -441,7 +451,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": [],
-                  "ext_asset": {"quantity":"0.0000 EOS", "contract":"eosio.token"},    
+                  "ext_asset": {"quantity":"0.0000 BOS", "contract":"eosio.token"},    
                   "memo": "another empty escrow",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": "18446744073709551615"
@@ -500,7 +510,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": [],
-                  "ext_asset": {"quantity": "0.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "0.0000 BOS", "contract": "eosio.token"},
                   "memo": "another empty escrow",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": "18446744073709551615"
@@ -526,7 +536,7 @@ describe "dacescrow" do
       context "with valid escrow id" do
         context "after a transfer has been made" do
           before(:all) do
-            `cleos push action eosio.token transfer '{"from": "sender2", "to": "dacescrow", "quantity": "6.0000 EOS", "memo": "here is a second memo" }' -p sender2`
+            `cleos push action eosio.token transfer '{"from": "sender2", "to": "dacescrow", "quantity": "6.0000 BOS", "memo": "here is a second memo" }' -p sender2`
           end
           command %(cleos push action dacescrow cancel '{ "key": 1}' -p sender2), allow_error: true
           its(:stderr) {is_expected.to include('Amount is not zero, this escrow is locked down')}
@@ -549,7 +559,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": [],
-                  "ext_asset": {"quantity": "6.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "6.0000 BOS", "contract": "eosio.token"},
                   "memo": "another empty escrow",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": "18446744073709551615"
@@ -586,7 +596,7 @@ describe "dacescrow" do
           context "before the escrow has expired" do
             before(:all) do
               `cleos push action dacescrow init '{"sender": "sender4", "receiver": "receiver1", "arb": "arb2", "expires": "2035-01-20T23:21:43.528", "memo": "distant future escrow", "ext_reference": null}' -p sender4`
-              `cleos push action eosio.token transfer '{"from": "sender4", "to": "dacescrow", "quantity": "5.0000 EOS", "memo": "here is a memo" }' -p sender4`
+              `cleos push action eosio.token transfer '{"from": "sender4", "to": "dacescrow", "quantity": "5.0000 BOS", "memo": "here is a memo" }' -p sender4`
               `cleos push action dacescrow approve '{ "key": 3, "approver": "sender4"}' -p sender4`
               `cleos push action dacescrow approve '{ "key": 3, "approver": "receiver1"}' -p receiver1`
             end
@@ -599,41 +609,41 @@ describe "dacescrow" do
           its(:stderr) {is_expected.to include('Escrow has not received the required number of approvals')}
         end
         context "balance of escrow should be set before preparing the escrow with a known balance starting point" do
-          command %(cleos get currency balance eosio.token dacescrow EOS), allow_error: true
+          command %(cleos get currency balance eosio.token dacescrow BOS), allow_error: true
           it do
             expect(subject.stdout).to eq <<~JSON
-                  11.0000 EOS
+                  11.0000 BOS
             JSON
           end
         end
         context "balance of escrow should be set before preparing the escrow with a known balance starting point" do
-          command %(cleos get currency balance eosio.token sender3 EOS), allow_error: true
+          command %(cleos get currency balance eosio.token sender3 BOS), allow_error: true
           it do
             expect(subject.stdout).to eq <<~JSON
-                  1000.0000 EOS
+                  1000.0000 BOS
             JSON
           end
         end
         context "after the escrow has expired" do
           before(:all) do
             `cleos push action dacescrow init '{"sender": "sender3", "receiver": "receiver1", "arb": "arb2", "expires": "2019-01-19T23:21:43.528", "memo": "some expired memo", "ext_reference": null}' -p sender3`
-            `cleos push action eosio.token transfer '{"from": "sender3", "to": "dacescrow", "quantity": "5.0000 EOS", "memo": "here is a memo" }' -p sender3`
+            `cleos push action eosio.token transfer '{"from": "sender3", "to": "dacescrow", "quantity": "5.0000 BOS", "memo": "here is a memo" }' -p sender3`
             `cleos push action dacescrow approve '{ "key": 4, "approver": "sender3"}' -p sender3`
             `cleos push action dacescrow approve '{ "key": 4, "approver": "receiver1"}' -p receiver1`
           end
           context "balance of dacescrow should have adjusted after preparing the escrow" do
-            command %(cleos get currency balance eosio.token dacescrow EOS), allow_error: true
+            command %(cleos get currency balance eosio.token dacescrow BOS), allow_error: true
             it do
               expect(subject.stdout).to eq <<~JSON
-                  16.0000 EOS
+                  16.0000 BOS
               JSON
             end
           end
           context "balance of sender3 should have adjusted after preparing the escrow" do
-            command %(cleos get currency balance eosio.token sender3 EOS), allow_error: true
+            command %(cleos get currency balance eosio.token sender3 BOS), allow_error: true
             it do
               expect(subject.stdout).to eq <<~JSON
-                  995.0000 EOS
+                  995.0000 BOS
               JSON
             end
           end
@@ -642,18 +652,18 @@ describe "dacescrow" do
             its(:stdout) {is_expected.to include('dacescrow <= dacescrow::refund')}
           end
           context "balance of dacescrow should have changed back after refunding an escrow" do
-            command %(cleos get currency balance eosio.token dacescrow EOS), allow_error: true
+            command %(cleos get currency balance eosio.token dacescrow BOS), allow_error: true
             it do
               expect(subject.stdout).to eq <<~JSON
-                  11.0000 EOS
+                  11.0000 BOS
               JSON
             end
           end
           context "balance of sender3 should have changed back after refunding an escrow" do
-            command %(cleos get currency balance eosio.token sender3 EOS), allow_error: true
+            command %(cleos get currency balance eosio.token sender3 BOS), allow_error: true
             it do
               expect(subject.stdout).to eq <<~JSON
-                  1000.0000 EOS
+                  1000.0000 BOS
               JSON
             end
           end
@@ -671,7 +681,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": [],
-                  "ext_asset": {"quantity": "6.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "6.0000 BOS", "contract": "eosio.token"},
                   "memo": "another empty escrow",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": "18446744073709551615"
@@ -681,7 +691,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb2",
                   "approvals": [],
-                  "ext_asset": {"quantity": "0.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "0.0000 BOS", "contract": "eosio.token"},
                   "memo": "some empty memo",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": "18446744073709551615"
@@ -694,7 +704,7 @@ describe "dacescrow" do
                     "sender4",
                     "receiver1"
                   ],
-                  "ext_asset": {"quantity": "5.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "5.0000 BOS", "contract": "eosio.token"},
                   "memo": "distant future escrow",
                   "expires": "2035-01-20T23:21:43",
                   "external_reference": "18446744073709551615"
@@ -740,7 +750,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": [],
-                  "ext_asset": {"quantity": "0.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "0.0000 BOS", "contract": "eosio.token"},
                   "memo": "some memo",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": 23
@@ -755,38 +765,38 @@ describe "dacescrow" do
 
     describe "transfer" do
       context "without valid auth" do
-        command %(cleos push action eosio.token transfer '{"from": "sender1", "to": "dacescrow", "quantity": "5.0000 EOS", "memo": "here is a memo" }' -p sender2), allow_error: true
+        command %(cleos push action eosio.token transfer '{"from": "sender1", "to": "dacescrow", "quantity": "5.0000 BOS", "memo": "here is a memo" }' -p sender2), allow_error: true
         its(:stderr) {is_expected.to include('missing authority of sender1')}
       end
       context "without a valid escrow" do
-        command %(cleos push action eosio.token transfer '{"from": "sender2", "to": "dacescrow", "quantity": "5.0000 EOS", "memo": "here is a memo" }' -p sender2), allow_error: true
+        command %(cleos push action eosio.token transfer '{"from": "sender2", "to": "dacescrow", "quantity": "5.0000 BOS", "memo": "here is a memo" }' -p sender2), allow_error: true
         its(:stderr) {is_expected.to include('Could not find existing escrow to deposit to, transfer cancelled')}
       end
-      context "balance should not have reduced from 1000.0000 EOS" do
-        command %(cleos get currency balance eosio.token sender1 EOS), allow_error: true
+      context "balance should not have reduced from 1000.0000 BOS" do
+        command %(cleos get currency balance eosio.token sender1 BOS), allow_error: true
         it do
           expect(subject.stdout).to eq <<~JSON
-            1000.0000 EOS
+            1000.0000 BOS
           JSON
         end
       end
       context "with a valid escrow" do
-        command %(cleos push action eosio.token transfer '{"from": "sender1", "to": "dacescrow", "quantity": "5.0000 EOS", "memo": "here is a memo" }' -p sender1), allow_error: true
+        command %(cleos push action eosio.token transfer '{"from": "sender1", "to": "dacescrow", "quantity": "5.0000 BOS", "memo": "here is a memo" }' -p sender1), allow_error: true
         its(:stdout) {is_expected.to include('dacescrow <= eosio.token::transfer')}
       end
-      context "balance should have reduced to 995.0000 EOS" do
-        command %(cleos get currency balance eosio.token sender1 EOS), allow_error: true
+      context "balance should have reduced to 995.0000 BOS" do
+        command %(cleos get currency balance eosio.token sender1 BOS), allow_error: true
         it do
           expect(subject.stdout).to eq <<~JSON
-            995.0000 EOS
+            995.0000 BOS
           JSON
         end
       end
-      context "balance of dacescrow should have increased by 5.0000 EOS" do
-        command %(cleos get currency balance eosio.token dacescrow EOS), allow_error: true
+      context "balance of dacescrow should have increased by 5.0000 BOS" do
+        command %(cleos get currency balance eosio.token dacescrow BOS), allow_error: true
         it do
           expect(subject.stdout).to eq <<~JSON
-            16.0000 EOS
+            16.0000 BOS
           JSON
         end
       end
@@ -801,7 +811,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": [],
-                  "ext_asset": {"quantity": "5.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "5.0000 BOS", "contract": "eosio.token"},
                   "memo": "some memo",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": 23
@@ -861,7 +871,7 @@ describe "dacescrow" do
                   "approvals": [
                     "arb1"
                   ],
-                  "ext_asset": {"quantity": "5.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "5.0000 BOS", "contract": "eosio.token"},
                   "memo": "some memo",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": 23
@@ -871,7 +881,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": [],
-                  "ext_asset": {"quantity": "0.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "0.0000 BOS", "contract": "eosio.token"},
                   "memo": "another empty escrow",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": 666
@@ -930,7 +940,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": ["sender1"],
-                  "ext_asset": {"quantity": "5.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "5.0000 BOS", "contract": "eosio.token"},
                   "memo": "some memo",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": 23
@@ -940,7 +950,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": [],
-                  "ext_asset": {"quantity": "0.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "0.0000 BOS", "contract": "eosio.token"},
                   "memo": "another empty escrow",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": 666
@@ -999,7 +1009,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": [],
-                  "ext_asset": {"quantity": "0.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "0.0000 BOS", "contract": "eosio.token"},
                   "memo": "another empty escrow",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": 666
@@ -1025,7 +1035,7 @@ describe "dacescrow" do
         context "with valid escrow id" do
           context "after a transfer has been made" do
             before(:all) do
-              `cleos push action eosio.token transfer '{"from": "sender2", "to": "dacescrow", "quantity": "6.0000 EOS", "memo": "here is a second memo" }' -p sender2`
+              `cleos push action eosio.token transfer '{"from": "sender2", "to": "dacescrow", "quantity": "6.0000 BOS", "memo": "here is a second memo" }' -p sender2`
             end
             command %(cleos push action dacescrow cancelext '{ "ext_key": 666}' -p sender2), allow_error: true
             its(:stderr) {is_expected.to include('Amount is not zero, this escrow is locked down')}
@@ -1048,7 +1058,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": [],
-                  "ext_asset": {"quantity": "6.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "6.0000 BOS", "contract": "eosio.token"},
                   "memo": "another empty escrow",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": 666
@@ -1085,7 +1095,7 @@ describe "dacescrow" do
             context "before the escrow has expired" do
               before(:all) do
                 `cleos push action dacescrow init '{"sender": "sender4", "receiver": "receiver1", "arb": "arb2", "expires": "2035-01-20T23:21:43.528", "memo": "distant future escrow", "ext_reference": 123}' -p sender4`
-                `cleos push action eosio.token transfer '{"from": "sender4", "to": "dacescrow", "quantity": "5.0000 EOS", "memo": "here is a memo" }' -p sender4`
+                `cleos push action eosio.token transfer '{"from": "sender4", "to": "dacescrow", "quantity": "5.0000 BOS", "memo": "here is a memo" }' -p sender4`
                 `cleos push action dacescrow approveext '{ "ext_key": 123, "approver": "sender4"}' -p sender4`
                 `cleos push action dacescrow approveext '{ "ext_key": 123, "approver": "receiver1"}' -p receiver1`
               end
@@ -1098,41 +1108,41 @@ describe "dacescrow" do
             its(:stderr) {is_expected.to include('Escrow has not received the required number of approvals')}
           end
           context "balance of escrow should be set before preparing the escrow with a known balance starting point" do
-            command %(cleos get currency balance eosio.token dacescrow EOS), allow_error: true
+            command %(cleos get currency balance eosio.token dacescrow BOS), allow_error: true
             it do
               expect(subject.stdout).to eq <<~JSON
-                  22.0000 EOS
+                  22.0000 BOS
               JSON
             end
           end
           context "balance of escrow should be set before preparing the escrow with a known balance starting point" do
-            command %(cleos get currency balance eosio.token sender3 EOS), allow_error: true
+            command %(cleos get currency balance eosio.token sender3 BOS), allow_error: true
             it do
               expect(subject.stdout).to eq <<~JSON
-                  1000.0000 EOS
+                  1000.0000 BOS
               JSON
             end
           end
           context "after the escrow has expired" do
             before(:all) do
               `cleos push action dacescrow init '{"sender": "sender3", "receiver": "receiver1", "arb": "arb2", "expires": "2019-01-19T23:21:43.528", "memo": "some expired memo", "ext_reference": 456}' -p sender3`
-              `cleos push action eosio.token transfer '{"from": "sender3", "to": "dacescrow", "quantity": "5.0000 EOS", "memo": "here is a memo" }' -p sender3`
+              `cleos push action eosio.token transfer '{"from": "sender3", "to": "dacescrow", "quantity": "5.0000 BOS", "memo": "here is a memo" }' -p sender3`
               `cleos push action dacescrow approveext '{ "ext_key": 456, "approver": "sender3"}' -p sender3`
               `cleos push action dacescrow approveext '{ "ext_key": 456, "approver": "receiver1"}' -p receiver1`
             end
             context "balance of dacescrow should have adjusted after preparing the escrow" do
-              command %(cleos get currency balance eosio.token dacescrow EOS), allow_error: true
+              command %(cleos get currency balance eosio.token dacescrow BOS), allow_error: true
               it do
                 expect(subject.stdout).to eq <<~JSON
-                  27.0000 EOS
+                  27.0000 BOS
                 JSON
               end
             end
             context "balance of sender3 should have adjusted after preparing the escrow" do
-              command %(cleos get currency balance eosio.token sender3 EOS), allow_error: true
+              command %(cleos get currency balance eosio.token sender3 BOS), allow_error: true
               it do
                 expect(subject.stdout).to eq <<~JSON
-                  995.0000 EOS
+                  995.0000 BOS
                 JSON
               end
             end
@@ -1141,18 +1151,18 @@ describe "dacescrow" do
               its(:stdout) {is_expected.to include('dacescrow <= dacescrow::refund')}
             end
             context "balance of dacescrow should have changed back after refunding an escrow" do
-              command %(cleos get currency balance eosio.token dacescrow EOS), allow_error: true
+              command %(cleos get currency balance eosio.token dacescrow BOS), allow_error: true
               it do
                 expect(subject.stdout).to eq <<~JSON
-                  22.0000 EOS
+                  22.0000 BOS
                 JSON
               end
             end
             context "balance of sender3 should have changed back after refunding an escrow" do
-              command %(cleos get currency balance eosio.token sender3 EOS), allow_error: true
+              command %(cleos get currency balance eosio.token sender3 BOS), allow_error: true
               it do
                 expect(subject.stdout).to eq <<~JSON
-                  1000.0000 EOS
+                  1000.0000 BOS
                 JSON
               end
             end
@@ -1170,7 +1180,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb1",
                   "approvals": [],
-                  "ext_asset": {"quantity": "6.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "6.0000 BOS", "contract": "eosio.token"},
                   "memo": "another empty escrow",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": 666
@@ -1180,7 +1190,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "arb": "arb2",
                   "approvals": [],
-                  "ext_asset": {"quantity": "0.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "0.0000 BOS", "contract": "eosio.token"},
                   "memo": "some empty memo",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": 821
@@ -1193,7 +1203,7 @@ describe "dacescrow" do
                     "sender4",
                     "receiver1"
                   ],
-                  "ext_asset": {"quantity": "5.0000 EOS", "contract": "eosio.token"},
+                  "ext_asset": {"quantity": "5.0000 BOS", "contract": "eosio.token"},
                   "memo": "distant future escrow",
                   "expires": "2035-01-20T23:21:43",
                   "external_reference": 123
