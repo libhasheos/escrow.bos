@@ -49,8 +49,16 @@ namespace eosdac {
         eosio_assert(found, "Could not find existing escrow to deposit to, transfer cancelled");
     }
 
-    ACTION dacescrow::init(name sender, name receiver, name arb, time_point_sec expires, string memo, std::optional<uint64_t> ext_reference ) {
+    ACTION dacescrow::init(name sender, name receiver, name auditor, time_point_sec expires, string memo, std::optional<uint64_t> ext_reference ) {
         require_auth(sender);
+
+        //TEMP: Ensure sender is a BOS Executive
+        eosio_assert(
+            sender == name("bosexec1") ||
+            sender == name("bosexec2") ||
+            sender == name("bosexec2") ,
+            "You must be a BOS executive to create an escrow."
+        );
 
         extended_asset zero_asset{{0, symbol{"BOS", 4}}, "eosio.token"_n};
 
@@ -69,10 +77,11 @@ namespace eosdac {
             p.key = escrows.available_primary_key();
             p.sender = sender;
             p.receiver = receiver;
-            p.arb = arb;
+            p.auditor = auditor;
             p.ext_asset = zero_asset;
             p.expires = expires;
             p.memo = memo;
+            p.locked = false;
             if (!ext_reference) {
                 p.external_reference = -1;
             } else {
@@ -89,7 +98,7 @@ namespace eosdac {
 
         eosio_assert(esc_itr->ext_asset.quantity.amount > 0, "This has not been initialized with a transfer");
 
-        eosio_assert(esc_itr->sender == approver || esc_itr->arb == approver, "You are not allowed to approve this escrow.");
+        eosio_assert(esc_itr->sender == approver || esc_itr->auditor == approver, "You are not allowed to approve this escrow.");
 
         auto approvals = esc_itr->approvals;
         eosio_assert(std::find(approvals.begin(), approvals.end(), approver) == approvals.end(), "You have already approved this escrow");
@@ -105,7 +114,7 @@ namespace eosdac {
         approve(*key, approver);
     }
 
-        ACTION dacescrow::unapprove(uint64_t key, name disapprover) {
+    ACTION dacescrow::unapprove(uint64_t key, name disapprover) {
         require_auth(disapprover);
 
         auto esc_itr = escrows.find(key);
@@ -133,6 +142,8 @@ namespace eosdac {
 
         eosio_assert(esc_itr->ext_asset.quantity.amount > 0, "This has not been initialized with a transfer");
 
+        eosio_assert(esc_itr->locked == false, "This escrow has been locked by the auditor");
+        
         auto approvals = esc_itr->approvals;
 
         eosio_assert(approvals.size() >= 1, "This escrow has not received the required approvals to claim");
@@ -189,6 +200,8 @@ namespace eosdac {
 
         eosio_assert(esc_itr->ext_asset.quantity.amount > 0, "This has not been initialized with a transfer");
 
+        eosio_assert(esc_itr->locked == false, "This escrow has been locked by the auditor");
+
         time_point_sec time_now = time_point_sec(current_time_point());
 
         eosio_assert(time_now >= esc_itr->expires, "Escrow has not expired");
@@ -209,6 +222,87 @@ namespace eosdac {
         eosio_assert(key.has_value(), "No escrow exists for this external key.");
         print("found key to approve :", key.value());
         refund(*key);
+    }
+
+    /*
+     * Allows the sender to extend the expiry
+     */
+    ACTION dacescrow::extend(uint64_t key, time_point_sec expires) {
+
+        auto esc_itr = escrows.find(key);
+        eosio_assert(esc_itr != escrows.end(), "Could not find escrow with that index");
+        eosio_assert(esc_itr->ext_asset.quantity.amount > 0, "This has not been initialized with a transfer");
+
+        time_point_sec time_now = time_point_sec(current_time_point());
+
+        //auditors may extend or shorten the time
+        //the sender may only extend
+        if(has_auth(esc_itr->sender)) {
+            eosio_assert(expires > esc_itr->expires, "You may only extend the expiry");
+        } else {
+            require_auth(esc_itr->auditor);
+        }
+
+        escrows.modify(esc_itr, eosio::same_payer, [&](escrow_info &e){
+            e.expires = expires;
+        });
+        
+    }
+
+    ACTION dacescrow::extendext(uint64_t ext_key, time_point_sec expires) {
+        auto key = key_for_external_key(ext_key);
+        eosio_assert(key.has_value(), "No escrow exists for this external key.");
+        print("found key to approve :", key.value());
+        extend(*key,expires);
+    }
+
+
+    /*
+     * Allows the auditor to close and refund an unexpired escrow
+     */
+    ACTION dacescrow::close(uint64_t key) {
+        auto esc_itr = escrows.find(key);
+        eosio_assert(esc_itr != escrows.end(), "Could not find escrow with that index");
+
+        require_auth(esc_itr->auditor);
+        eosio_assert(esc_itr->ext_asset.quantity.amount > 0, "This has not been initialized with a transfer");
+
+        eosio::action(
+                eosio::permission_level{_self , "active"_n }, esc_itr->ext_asset.contract, "transfer"_n,
+                make_tuple( _self, esc_itr->sender, esc_itr->ext_asset.quantity, esc_itr->memo)
+        ).send();
+
+        escrows.erase(esc_itr);
+    }
+
+    ACTION dacescrow::closeext(uint64_t ext_key) {
+        auto key = key_for_external_key(ext_key);
+        eosio_assert(key.has_value(), "No escrow exists for this external key.");
+        print("found key to approve :", key.value());
+        close(*key);
+    }
+
+    /*
+     * Allows the auditor to lock an escrow preventing any actions by sender or receiver
+     */
+    ACTION dacescrow::lock(uint64_t key, bool locked) {
+
+        auto esc_itr = escrows.find(key);
+        eosio_assert(esc_itr != escrows.end(), "Could not find escrow with that index");
+        eosio_assert(esc_itr->ext_asset.quantity.amount > 0, "This has not been initialized with a transfer");
+        require_auth(esc_itr->auditor);
+
+        escrows.modify(esc_itr, eosio::same_payer, [&](escrow_info &e){
+            e.locked = locked;
+        });
+        
+    }
+
+    ACTION dacescrow::lockext(uint64_t ext_key, bool locked) {
+        auto key = key_for_external_key(ext_key);
+        eosio_assert(key.has_value(), "No escrow exists for this external key.");
+        print("found key to approve :", key.value());
+        lock(*key,locked);
     }
 
     ACTION dacescrow::clean() {

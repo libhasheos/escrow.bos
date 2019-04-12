@@ -42,6 +42,12 @@ namespace eosdac {
 
         ACTION cancel(uint64_t key);
 
+        ACTION extend(uint64_t key, time_point_sec expires);
+
+        ACTION close(uint64_t key);
+
+        ACTION lock(uint64_t key, bool locked);
+
         // Actions using the external reference key
 
         ACTION approveext(uint64_t ext_key, name approver);
@@ -54,6 +60,12 @@ namespace eosdac {
 
         ACTION cancelext(uint64_t ext_key);
 
+        ACTION extendext(uint64_t ext_key, time_point_sec expires);
+
+        ACTION closeext(uint64_t ext_key);
+
+        ACTION lockext(uint64_t ext_key, bool locked);
+        
         ACTION clean();
 
     private:

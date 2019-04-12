@@ -10,12 +10,13 @@ struct [[eosio::table("escrows"), eosio::contract("dacescrow")]] escrow_info {
     uint64_t        key;
     name            sender;
     name            receiver;
-    name            arb;
+    name            auditor;
     vector<name>    approvals;
     extended_asset  ext_asset;
     string          memo;
     time_point_sec  expires;
     uint64_t        external_reference;
+    bool            locked = false;
 
     uint64_t        primary_key() const { return key; }
     uint64_t        by_external_ref() const { return external_reference; }
