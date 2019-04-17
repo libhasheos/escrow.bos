@@ -1,5 +1,5 @@
 {
-    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT Wed Apr 10 12:49:42 2019",
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT Fri Apr 12 15:13:51 2019",
     "version": "eosio::abi/1.1",
     "structs": [
         {
@@ -76,6 +76,26 @@
             "fields": []
         },
         {
+            "name": "close",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "closeext",
+            "base": "",
+            "fields": [
+                {
+                    "name": "ext_key",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
             "name": "escrow_info",
             "base": "",
             "fields": [
@@ -92,7 +112,7 @@
                     "type": "name"
                 },
                 {
-                    "name": "arb",
+                    "name": "auditor",
                     "type": "name"
                 },
                 {
@@ -114,6 +134,38 @@
                 {
                     "name": "external_reference",
                     "type": "uint64"
+                },
+                {
+                    "name": "locked",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "extend",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "uint64"
+                },
+                {
+                    "name": "expires",
+                    "type": "time_point_sec"
+                }
+            ]
+        },
+        {
+            "name": "extendext",
+            "base": "",
+            "fields": [
+                {
+                    "name": "ext_key",
+                    "type": "uint64"
+                },
+                {
+                    "name": "expires",
+                    "type": "time_point_sec"
                 }
             ]
         },
@@ -130,7 +182,7 @@
                     "type": "name"
                 },
                 {
-                    "name": "arb",
+                    "name": "auditor",
                     "type": "name"
                 },
                 {
@@ -144,6 +196,34 @@
                 {
                     "name": "ext_reference",
                     "type": "uint64?"
+                }
+            ]
+        },
+        {
+            "name": "lock",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "uint64"
+                },
+                {
+                    "name": "locked",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "lockext",
+            "base": "",
+            "fields": [
+                {
+                    "name": "ext_key",
+                    "type": "uint64"
+                },
+                {
+                    "name": "locked",
+                    "type": "bool"
                 }
             ]
         },
@@ -256,9 +336,39 @@
             "ricardian_contract": "## ACTION: clean\n\n**INTENT:** The intent of clean is remove all existing escrow agreements for developer purposes. This can only be run with _self permission of the contract which would be unavailable on the main net once the contract permissions are removed for the contract account.\n**TERM:** This action lasts for the duration of the time taken to process the transaction."
         },
         {
+            "name": "close",
+            "type": "close",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "closeext",
+            "type": "closeext",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "extend",
+            "type": "extend",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "extendext",
+            "type": "extendext",
+            "ricardian_contract": ""
+        },
+        {
             "name": "init",
             "type": "init",
             "ricardian_contract": "## ACTION: init\n**PARAMETERS:**\n* __sender__ is an eosio account name. \n* __receiver__ is an eosio account name. \n* __arb__ is an eosio account name. \n* __expires__ The date/time after which the escrow amount can be refunded by the sender. \n* __memo__ is a memo to send as the eventual transfer memo at the end of the escrow contract. \n* __ext_reference__ is a reference to to external id held my another contract or entity as opposed to the internal auto-incrementing key.\n\n**INTENT** The intent of init is to create an empty escrow payment agreement for safe and secure funds transfer protecting both sender and receiver for a determined amount of time. \n#### Warning: This action will store the content on the chain in the history logs and the data cannot be deleted later so therefore should only store a unidentifiable hash of content rather than human readable content."
+        },
+        {
+            "name": "lock",
+            "type": "lock",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "lockext",
+            "type": "lockext",
+            "ricardian_contract": ""
         },
         {
             "name": "refund",

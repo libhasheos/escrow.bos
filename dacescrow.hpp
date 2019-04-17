@@ -28,7 +28,7 @@ namespace eosdac {
          * Escrow contract
          */
 
-        ACTION init(name sender, name receiver, name arb, time_point_sec expires, string memo, std::optional<uint64_t> ext_reference);
+        ACTION init(name sender, name receiver, name auditor, time_point_sec expires, string memo, std::optional<uint64_t> ext_reference);
 
         ACTION transfer(name from, name to, asset quantity, string memo);
 

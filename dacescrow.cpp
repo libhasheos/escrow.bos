@@ -53,12 +53,12 @@ namespace eosdac {
         require_auth(sender);
 
         //TEMP: Ensure sender is a BOS Executive
-        eosio_assert(
-            sender == name("bosexec1") ||
-            sender == name("bosexec2") ||
-            sender == name("bosexec2") ,
-            "You must be a BOS executive to create an escrow."
-        );
+        // eosio_assert(
+        //     sender == name("bosexec1") ||
+        //     sender == name("bosexec2") ||
+        //     sender == name("bosexec2") ,
+        //     "You must be a BOS executive to create an escrow."
+        // );
 
         extended_asset zero_asset{{0, symbol{"BOS", 4}}, "eosio.token"_n};
 
@@ -73,6 +73,7 @@ namespace eosdac {
             eosio_assert(!key_for_external_key(*ext_reference),
                          "Already have an escrow with this external reference");
         }
+
         escrows.emplace(sender, [&](escrow_info &p) {
             p.key = escrows.available_primary_key();
             p.sender = sender;
@@ -288,9 +289,9 @@ namespace eosdac {
     ACTION dacescrow::lock(uint64_t key, bool locked) {
 
         auto esc_itr = escrows.find(key);
-        eosio_assert(esc_itr != escrows.end(), "Could not find escrow with that index");
-        eosio_assert(esc_itr->ext_asset.quantity.amount > 0, "This has not been initialized with a transfer");
+        eosio_assert(esc_itr != escrows.end(), "Could not find escrow with that index");        
         require_auth(esc_itr->auditor);
+        eosio_assert(esc_itr->ext_asset.quantity.amount > 0, "This has not been initialized with a transfer");
 
         escrows.modify(esc_itr, eosio::same_payer, [&](escrow_info &e){
             e.locked = locked;
@@ -364,6 +365,12 @@ EOSIO_ABI_EX(eosdac::dacescrow,
                      (refundext)
                      (cancel)
                      (cancelext)
+                     (extend)
+                     (extendext)
+                     (close)
+                     (closeext)
+                     (lock)
+                     (lockext)
                      (clean)
 )
     
