@@ -326,6 +326,7 @@ describe "dacescrow" do
       end
     end
 
+
     describe "approve" do
       context "without valid auth" do
         command %(cleos push action dacescrow approve '{ "key": 0, "approver": "arb1"}' -p sender2), allow_error: true
@@ -396,6 +397,79 @@ describe "dacescrow" do
               JSON
             end
           end
+        end
+      end
+    end
+    
+    describe "lock" do
+      context "without valid auth" do
+        command %(cleos push action dacescrow lock '{ "key": 0, "locked": 1}' -p sender1), allow_error: true
+        its(:stderr) {is_expected.to include('missing authority of arb1')}
+      end
+      context "with valid auth" do
+        context "with invalid escrow key" do
+          command %(cleos push action dacescrow lock '{ "key": 4, "locked": 1}' -p arb1), allow_error: true
+          its(:stderr) {is_expected.to include('Could not find escrow with that index')}
+        end
+        context "with valid escrow id" do
+          context "before a corresponding transfer has been made" do
+            command %(cleos push action dacescrow lock '{ "key": 1, "locked": 1}' -p arb1), allow_error: true
+            its(:stderr) {is_expected.to include('This has not been initialized with a transfer')}
+          end
+          context "after a corresponding transfer has been made" do
+            command %(cleos push action dacescrow lock '{ "key": 0, "locked": 1}' -p arb1), allow_error: true
+            its(:stdout) {is_expected.to include('dacescrow <= dacescrow::lock')}
+          end
+        end
+      end
+      context "after an escrow is locked" do
+        context "sender may not refund" do
+          command %(cleos push action dacescrow refund '{ "key": 0}' -p sender1), allow_error: true
+          its(:stderr) {is_expected.to include('This escrow has been locked by the auditor')}
+        end
+        context "receiver may not claim" do
+          command %(cleos push action dacescrow claim '{ "key": 0}' -p receiver1), allow_error: true
+          its(:stderr) {is_expected.to include('This escrow has been locked by the auditor')}
+        end
+        context "Read the escrow table after lock" do
+          command %(cleos get table dacescrow dacescrow escrows), allow_error: true
+          it do
+            expect(JSON.parse(subject.stdout)).to eq JSON.parse <<~JSON
+            {
+              "rows": [{
+                  "key": 0,
+                  "locked": 1,
+                  "sender": "sender1",
+                  "receiver": "receiver1",
+                  "auditor": "arb1",
+                  "approvals": [
+                    "arb1"
+                  ],
+                  "ext_asset": {"quantity":"5.0000 BOS", "contract":"eosio.token"},    
+                  "memo": "some memo",
+                  "expires": "2019-01-20T23:21:43",
+                  "external_reference": "18446744073709551615"
+                },{
+                  "key": 1,
+                  "locked": 0,
+                  "sender": "sender2",
+                  "receiver": "receiver1",
+                  "auditor": "arb1",
+                  "approvals": [],
+                  "ext_asset": {"quantity":"0.0000 BOS", "contract":"eosio.token"},    
+                  "memo": "another empty escrow",
+                  "expires": "2019-01-20T23:21:43",
+                  "external_reference": "18446744073709551615"
+                }
+              ],
+              "more": false
+            }
+            JSON
+          end
+        end
+        context "auditor may unlock escrow" do
+          command %(cleos push action dacescrow lock '{ "key": 0, "locked": 0}' -p arb1), allow_error: true
+          its(:stdout) {is_expected.to include('dacescrow <= dacescrow::lock')}
         end
       end
     end
@@ -1080,6 +1154,80 @@ describe "dacescrow" do
               JSON
             end
           end
+        end
+      end
+    end
+
+    
+    describe "lockext" do
+      context "without valid auth" do
+        command %(cleos push action dacescrow lockext '{ "ext_key": 23, "locked": 1}' -p sender1), allow_error: true
+        its(:stderr) {is_expected.to include('missing authority of arb1')}
+      end
+      context "with valid auth" do
+        context "with invalid escrow key" do
+          command %(cleos push action dacescrow lockext '{ "ext_key": 123, "locked": 1}' -p arb1), allow_error: true
+          its(:stderr) {is_expected.to include('No escrow exists for this external key')}
+        end
+        context "with valid escrow id" do
+          context "before a corresponding transfer has been made" do
+            command %(cleos push action dacescrow lockext '{ "ext_key": 666, "locked": 1}' -p arb1), allow_error: true
+            its(:stderr) {is_expected.to include('This has not been initialized with a transfer')}
+          end
+          context "after a corresponding transfer has been made" do
+            command %(cleos push action dacescrow lockext '{ "ext_key": 23, "locked": 1}' -p arb1), allow_error: true
+            its(:stdout) {is_expected.to include('dacescrow <= dacescrow::lockext')}
+          end
+        end
+      end
+      context "after an escrow is locked" do
+        context "sender may not refund" do
+          command %(cleos push action dacescrow refundext '{ "ext_key": 23}' -p sender1), allow_error: true
+          its(:stderr) {is_expected.to include('This escrow has been locked by the auditor')}
+        end
+        context "receiver may not claim" do
+          command %(cleos push action dacescrow claimext '{ "ext_key": 23}' -p receiver1), allow_error: true
+          its(:stderr) {is_expected.to include('This escrow has been locked by the auditor')}
+        end
+        context "Read the escrow table after lock" do
+          command %(cleos get table dacescrow dacescrow escrows), allow_error: true
+          it do
+            expect(JSON.parse(subject.stdout)).to eq JSON.parse <<~JSON
+            {
+              "rows": [{
+                  "key": 0,
+                  "locked": 1,
+                  "sender": "sender1",
+                  "receiver": "receiver1",
+                  "auditor": "arb1",
+                  "approvals": [
+                    "arb1"
+                  ],
+                  "ext_asset": {"quantity": "5.0000 BOS", "contract": "eosio.token"},
+                  "memo": "some memo",
+                  "expires": "2019-01-20T23:21:43",
+                  "external_reference": 23
+                },{
+                  "key": 1,
+                  "locked": 0,
+                  "sender": "sender2",
+                  "receiver": "receiver1",
+                  "auditor": "arb1",
+                  "approvals": [],
+                  "ext_asset": {"quantity": "0.0000 BOS", "contract": "eosio.token"},
+                  "memo": "another empty escrow",
+                  "expires": "2019-01-20T23:21:43",
+                  "external_reference": 666
+                }
+              ],
+              "more": false
+            }
+            JSON
+          end
+        end
+        context "auditor may unlock escrow" do
+          command %(cleos push action dacescrow lockext '{ "ext_key": 23, "locked": 0}' -p arb1), allow_error: true
+          its(:stdout) {is_expected.to include('dacescrow <= dacescrow::lockext')}
         end
       end
     end
