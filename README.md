@@ -168,7 +168,6 @@ approveext
 
 **TERM:** This action lasts for the duration of the time taken to process the transaction.
 
-
 <h1 class="contract">
   cancel
 </h1>
