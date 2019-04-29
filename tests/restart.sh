@@ -6,6 +6,6 @@ nodeos -e -p eosio \
 	--plugin eosio::http_plugin \
 	--plugin eosio::history_plugin \
 	--plugin eosio::history_api_plugin \
-	--access-control-allow-origin=* \
+	--access-control-allow-origin="*" \
 	--contracts-console \
     --delete-all-blocks --verbose-http-errors

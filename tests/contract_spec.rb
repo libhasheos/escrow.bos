@@ -12,8 +12,8 @@ RSpec.configure do |config|
   config.include RSpecCommand
 end
 
-EOSIO_PUB = 'EOS8kkhi1qYPWJMpDJXabv4YnqjuzisA5ZdRpGG8vhSGmRDqi6CUn'
-EOSIO_PVT = '5KDFWhsMK3fuze6yXgFRmVDEEE5kbQJrJYCBhGKV2KWHCbjsYYy'
+EOSIO_PUB = 'EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV'
+EOSIO_PVT = '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3'
 
 CONTRACT_OWNER_PRIVATE_KEY = '5K86iZz9h8jwgGDttMPcHqFHHru5ueqnfDs5fVSHfm8bJt8PjK6'
 CONTRACT_OWNER_PUBLIC_KEY = 'EOS6Y1fKGLVr2zEFKKfAmRUoH1LzM7crJEBi4dL5ikYeGYqiJr6SS'
@@ -126,7 +126,7 @@ def configure_dac_accounts
   #  cleos system newaccount --stake-cpu \"10.0000 BOS\" --stake-net \"10.0000 BOS\" --transfer --buy-ram-kbytes 1024 eosio dacocoiogmbh #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
   #  cleos system newaccount --stake-cpu \"10.0000 BOS\" --stake-net \"10.0000 BOS\" --transfer --buy-ram-kbytes 1024 eosio dacproposals #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
   #  cleos system newaccount --stake-cpu \"10.0000 BOS\" --stake-net \"10.0000 BOS\" --transfer --buy-ram-kbytes 1024 eosio dacescrow #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
-   
+
    cleos create account eosio daccustodian #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
    cleos create account eosio eosdactokens #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
    cleos create account eosio dacauthority #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
@@ -142,14 +142,14 @@ def configure_dac_accounts
   #  cleos push action eosio.token issue '["eosdacthedac", "100000.0000 BOS", "Initial BOS amount."]' -p eosio
 
   #  cleos set action permission eosdacthedac eosdactokens transfer xfer
-  #  cleos set action permission eosdacthedac eosio.token transfer xfer  
-  #  cleos set action permission daccustodian eosdactokens transfer xfer  
- 
+  #  cleos set action permission eosdacthedac eosio.token transfer xfer
+  #  cleos set action permission daccustodian eosdactokens transfer xfer
+
    # Configure accounts permissions hierarchy
-  #  cleos set account permission dacauthority high #{CONTRACT_OWNER_PUBLIC_KEY} owner -p dacauthority@owner 
-  #  cleos set account permission dacauthority med #{CONTRACT_OWNER_PUBLIC_KEY} high -p dacauthority@owner 
-  #  cleos set account permission dacauthority low #{CONTRACT_OWNER_PUBLIC_KEY} med -p dacauthority@owner 
-  #  cleos set account permission dacauthority one #{CONTRACT_OWNER_PUBLIC_KEY} low -p dacauthority@owner   
+  #  cleos set account permission dacauthority high #{CONTRACT_OWNER_PUBLIC_KEY} owner -p dacauthority@owner
+  #  cleos set account permission dacauthority med #{CONTRACT_OWNER_PUBLIC_KEY} high -p dacauthority@owner
+  #  cleos set account permission dacauthority low #{CONTRACT_OWNER_PUBLIC_KEY} med -p dacauthority@owner
+  #  cleos set account permission dacauthority one #{CONTRACT_OWNER_PUBLIC_KEY} low -p dacauthority@owner
 
    cleos set account permission #{ACCOUNT_NAME} active '{"threshold": 1,"keys": [{"key": "#{CONTRACT_ACTIVE_PUBLIC_KEY}","weight": 1}],"accounts": [{"permission":{"actor":"#{ACCOUNT_NAME}","permission":"eosio.code"},"weight":1}]}' owner -p #{ACCOUNT_NAME}
 
@@ -165,10 +165,10 @@ def install_dependencies
    # set -x
 
 
-   cleos set contract daccustodian #{CONTRACTS_DIR}/daccustodian -p daccustodian 
+   cleos set contract daccustodian #{CONTRACTS_DIR}/daccustodian -p daccustodian
    cleos set contract eosdactokens #{CONTRACTS_DIR}/eosdactokens -p eosdactokens
    cleos set contract dacproposals #{CONTRACTS_DIR}/dacproposals -p dacproposals
-   cleos set contract #{ACCOUNT_NAME} ../output/unit_tests/#{CONTRACT_NAME} -p #{ACCOUNT_NAME}
+   cleos set contract #{ACCOUNT_NAME} ../ escrow.wasm escrow.abi -p #{ACCOUNT_NAME}
 
   SHELL
 
@@ -251,7 +251,7 @@ describe "dacescrow" do
                     "receiver": "receiver1",
                     "auditor": "arb1",
                     "approvals": [],
-                    "ext_asset": {"quantity":"0.0000 BOS", "contract":"eosio.token"},    
+                    "ext_asset": {"quantity":"0.0000 BOS", "contract":"eosio.token"},
                     "memo": "some memo",
                     "expires": "2019-01-20T23:21:43",
                     "external_reference": "18446744073709551615"
@@ -313,7 +313,7 @@ describe "dacescrow" do
                     "receiver": "receiver1",
                     "auditor": "arb1",
                     "approvals": [],
-                    "ext_asset": {"quantity":"5.0000 BOS", "contract":"eosio.token"},    
+                    "ext_asset": {"quantity":"5.0000 BOS", "contract":"eosio.token"},
                     "memo": "some memo",
                     "expires": "2019-01-20T23:21:43",
                     "external_reference": "18446744073709551615"
@@ -375,7 +375,7 @@ describe "dacescrow" do
                     "approvals": [
                       "arb1"
                     ],
-                    "ext_asset": {"quantity":"5.0000 BOS", "contract":"eosio.token"},    
+                    "ext_asset": {"quantity":"5.0000 BOS", "contract":"eosio.token"},
                     "memo": "some memo",
                     "expires": "2019-01-20T23:21:43",
                     "external_reference": "18446744073709551615"
@@ -386,7 +386,7 @@ describe "dacescrow" do
                     "receiver": "receiver1",
                     "auditor": "arb1",
                     "approvals": [],
-                    "ext_asset": {"quantity":"0.0000 BOS", "contract":"eosio.token"},    
+                    "ext_asset": {"quantity":"0.0000 BOS", "contract":"eosio.token"},
                     "memo": "another empty escrow",
                     "expires": "2019-01-20T23:21:43",
                     "external_reference": "18446744073709551615"
@@ -400,7 +400,7 @@ describe "dacescrow" do
         end
       end
     end
-    
+
     describe "lock" do
       context "without valid auth" do
         command %(cleos push action dacescrow lock '{ "key": 0, "locked": 1}' -p sender1), allow_error: true
@@ -445,7 +445,7 @@ describe "dacescrow" do
                   "approvals": [
                     "arb1"
                   ],
-                  "ext_asset": {"quantity":"5.0000 BOS", "contract":"eosio.token"},    
+                  "ext_asset": {"quantity":"5.0000 BOS", "contract":"eosio.token"},
                   "memo": "some memo",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": "18446744073709551615"
@@ -456,7 +456,7 @@ describe "dacescrow" do
                   "receiver": "receiver1",
                   "auditor": "arb1",
                   "approvals": [],
-                  "ext_asset": {"quantity":"0.0000 BOS", "contract":"eosio.token"},    
+                  "ext_asset": {"quantity":"0.0000 BOS", "contract":"eosio.token"},
                   "memo": "another empty escrow",
                   "expires": "2019-01-20T23:21:43",
                   "external_reference": "18446744073709551615"
@@ -519,7 +519,7 @@ describe "dacescrow" do
                     "receiver": "receiver1",
                     "auditor": "arb1",
                     "approvals": ["sender1"],
-                    "ext_asset": {"quantity":"5.0000 BOS", "contract":"eosio.token"},    
+                    "ext_asset": {"quantity":"5.0000 BOS", "contract":"eosio.token"},
                     "memo": "some memo",
                     "expires": "2019-01-20T23:21:43",
                     "external_reference": "18446744073709551615"
@@ -530,7 +530,7 @@ describe "dacescrow" do
                     "receiver": "receiver1",
                     "auditor": "arb1",
                     "approvals": [],
-                    "ext_asset": {"quantity":"0.0000 BOS", "contract":"eosio.token"},    
+                    "ext_asset": {"quantity":"0.0000 BOS", "contract":"eosio.token"},
                     "memo": "another empty escrow",
                     "expires": "2019-01-20T23:21:43",
                     "external_reference": "18446744073709551615"
@@ -831,7 +831,7 @@ describe "dacescrow" do
               its(:stdout) {is_expected.to include('dacescrow <= dacescrow::extend')}
             end
           end
-        end    
+        end
         context "Read the escrow table after extend" do
           command %(cleos get table dacescrow dacescrow escrows), allow_error: true
           it do
@@ -903,17 +903,17 @@ describe "dacescrow" do
               JSON
             end
           end
-          
+
           context "with invalid auth" do
             command %(cleos push action dacescrow close '{ "key": 1}' -p sender1), allow_error: true
             its(:stderr) {is_expected.to include('missing authority of arb1')}
-          end            
+          end
           context "with valid auth" do
             context "before a corresponding transfer has been made" do
               command %(cleos push action dacescrow close '{ "key": 2}' -p arb2), allow_error: true
               its(:stderr) {is_expected.to include('This has not been initialized with a transfer')}
-            end  
-            context "after a corresponding transfer has been made" do 
+            end
+            context "after a corresponding transfer has been made" do
               command %(cleos push action dacescrow close '{ "key": 1 }' -p arb1), allow_error: true
               its(:stdout) {is_expected.to include('dacescrow <= dacescrow::close')}
             end
@@ -972,7 +972,7 @@ describe "dacescrow" do
           JSON
         end
       end
-        
+
     end
   end
 
@@ -1158,7 +1158,7 @@ describe "dacescrow" do
       end
     end
 
-    
+
     describe "lockext" do
       context "without valid auth" do
         command %(cleos push action dacescrow lockext '{ "ext_key": 23, "locked": 1}' -p sender1), allow_error: true
@@ -1592,7 +1592,7 @@ describe "dacescrow" do
             its(:stdout) {is_expected.to include('dacescrow <= dacescrow::extendext')}
           end
         end
-      end    
+      end
       context "Read the escrow table after extendext" do
         command %(cleos get table dacescrow dacescrow escrows), allow_error: true
         it do
@@ -1666,13 +1666,13 @@ describe "dacescrow" do
         context "with invalid auth" do
           command %(cleos push action dacescrow closeext '{ "ext_key": 666}' -p sender1), allow_error: true
           its(:stderr) {is_expected.to include('missing authority of arb1')}
-        end            
+        end
         context "with valid auth" do
           context "before a corresponding transfer has been made" do
             command %(cleos push action dacescrow closeext '{ "ext_key": 821}' -p arb2), allow_error: true
             its(:stderr) {is_expected.to include('This has not been initialized with a transfer')}
-          end  
-          context "after a corresponding transfer has been made" do 
+          end
+          context "after a corresponding transfer has been made" do
             command %(cleos push action dacescrow closeext '{ "ext_key": 666 }' -p arb1), allow_error: true
             its(:stdout) {is_expected.to include('dacescrow <= dacescrow::closeext')}
           end
@@ -1730,7 +1730,7 @@ describe "dacescrow" do
             }
         JSON
       end
-    end  
+    end
 
   end
 end
