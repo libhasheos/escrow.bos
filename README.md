@@ -27,7 +27,7 @@ An escrow contract designed for paying worker proposals.  The intention is that 
 
 - __sender__ is an eosio account name.
 - __receiver__ is an eosio account name.
-- __arb__ is an eosio account name.
+- __auditor__ is an eosio account name.
 - __expires__ The date/time after which the escrow amount can be refunded by the sender.
 - __memo__ is a memo to send as the eventual transfer memo at the end of the escrow contract.
 - __ext_reference__ is a reference to to external id held my another contract or entity as opposed to the internal auto-incrementing key.
