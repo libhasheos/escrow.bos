@@ -1,0 +1,20 @@
+{
+  "threshold": 1,
+  "keys": [],
+  "accounts": [
+    {
+      "permission": {
+        "actor": "bet.bos",
+        "permission": "active"
+      },
+      "weight": 1
+    },
+    {
+      "permission": {
+        "actor": "eosio",
+        "permission": "active"
+      },
+      "weight": 1
+    }
+  ]
+}
