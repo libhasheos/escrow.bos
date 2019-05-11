@@ -62,7 +62,7 @@ An escrow contract designed for paying worker proposals.  The intention is that 
 **PARAMETERS:**
 
 - __key__ is a unique identifying integer for an escrow entry.
-- __approver__ is an eosio account name
+- __approver__ is an eosio account name. (BET Account)
 
 **INTENT:** The intent of approve is to approve the release of funds to the intended receiver. Each escrow agreement requires at least 7 BET permissions (excluding sender) to grant fund release.
 
@@ -77,7 +77,7 @@ approveext
 **PARAMETERS:**
 
 - __ext_key__ is a unique identifying integer for an escrow entry as supplied by an external key source.
-- __approver__ is an eosio account name.
+- __approver__ is an eosio account name. (BET Account)
 
 **INTENT:** The intent of approve is to approve the release of funds to the intended receiver. Each escrow agreement requires at least 7 BET permissions (excluding sender) to grant fund release.
 
@@ -94,7 +94,7 @@ approveext
 - __key__ is a unique identifying integer for an escrow entry.
 - __disapprover__ is an eosio account name.
 
-**INTENT:** The intent of unapprove is to unapprove the release of funds to the intended receiver from a previous approved action. Each escrow agreement requires at least 2 approvers and can only be approved by the sender.
+**INTENT:** The intent of unapprove is to unapprove the release of funds to the intended receiver from a previous approved action.
 
 > **Warning**: This action will store the content on the chain in the history logs and the data cannot be deleted later.
 
@@ -109,7 +109,7 @@ approveext
 - __ext_key__ is a unique identifying integer for an escrow entry as supplied by an external key source.
 - __disapprover__ is an eosio account name.
 
-**INTENT:** The intent of unapprove is to unapprove the release of funds to the intended receiver from a previous approved action. Each escrow agreement requires at least 2 approvers and can only be approved by the sender.
+**INTENT:** The intent of unapprove is to unapprove the release of funds to the intended receiver from a previous approved action.
 
 > **Warning**: This action will store the content on the chain in the history logs and the data cannot be deleted later.
 
